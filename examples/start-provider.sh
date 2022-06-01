@@ -1,0 +1,1 @@
+python bin/provider.py --provider-name "my-computer" --gateway-url "ws://localhost:9999/" --gateway-password 1234 --log-level info
