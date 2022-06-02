@@ -16,7 +16,7 @@ setup(
     long_description=readme,
     long_description_content_type="text/markdown",
     url="",
-    packages=[ "wsgateway" ],
+    packages=[ "wsgateway", "wsgateway.tools" ],
     install_requires=requirements,
     classifiers=[
         "Programming Language :: Python :: 3.9",
