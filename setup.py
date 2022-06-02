@@ -21,5 +21,11 @@ setup(
     classifiers=[
         "Programming Language :: Python :: 3.9",
     ],
-    scripts=[]
+    entry_points = {
+        "console_scripts": [
+            "wsgw-gateway=wsgateway.tools.gateway:main",
+            "wsgw-provider=wsgateway.tools.provider:main",
+            "wsgw-client=wsgateway.tools.client:main",
+        ]
+    }
 )

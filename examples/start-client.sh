@@ -1,1 +1,1 @@
-python bin/client.py --profile examples/profile.ini --log-level info
+wsgw-client --profile examples/profile.ini --log-level info

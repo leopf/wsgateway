@@ -1,1 +1,1 @@
-python bin/gateway.py --password 1234 --port 9999 --log-level info
+wsgw-gateway --password 1234 --port 9999 --log-level info
