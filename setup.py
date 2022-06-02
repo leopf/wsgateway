@@ -9,7 +9,7 @@ requirements = [
 
 setup(
     name="wsgateway",
-    version="0.0.1",
+    version="0.0.2",
     author="leopf",
     author_email="",
     description="",
