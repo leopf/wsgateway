@@ -5,6 +5,7 @@ from wsgateway.messages import *
 from wsgateway.log import *
 import logging
 import argparse
+from wsgateway.config import setup_args_and_config
 
 GATEWAY_URL_FULL = ""
 GATEWAY_PW = ""
@@ -124,29 +125,18 @@ async def start_provider():
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Websocket Gateway - Gateway')
-    parser.add_argument('--provider-name', dest='provider_name', help='name of this provider')
-    parser.add_argument('--gateway-url', dest='gw_url', help='url to the gateway')
-    parser.add_argument('--gateway-password', dest='gw_pw', help='password for the gateway')
-
-    define_logging_parser_args(parser)
-
-    args = parser.parse_args()
-
-    if not setup_logging(args):
-        print("bad logging arguments.")
-        parser.print_help()
-        return
-
-    if not args.gw_url or not args.gw_pw or not args.provider_name:
-        parser.print_help()
-        return
+    config = setup_args_and_config("Provider")
+    config.parse_gateway_password()
+    config.parse_gateway_url()
+    config.parse_provider_name()
+    config.finish()
 
     global GATEWAY_PW, GATEWAY_URL_FULL
-    GATEWAY_PW = args.gw_pw
+    GATEWAY_PW = config.gateway_pw
 
-    gateway_url_base = args.gw_url + "p/" if args.gw_url.endswith("/") else args.gw_url + "/p/"
-    GATEWAY_URL_FULL = gateway_url_base + args.provider_name
+    gateway_url = config.gateway_url
+    gateway_url_base = gateway_url + "p/" if gateway_url.endswith("/") else gateway_url + "/p/"
+    GATEWAY_URL_FULL = gateway_url_base + config.provider_name
 
     asyncio.run(start_provider())
 

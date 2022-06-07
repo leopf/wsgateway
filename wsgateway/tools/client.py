@@ -8,8 +8,7 @@ import json
 from wsgateway.messages import pack_msg_close, pack_msg_data, pack_msg_open, unpack_msg_data, MSG_TYPE_CLOSE, MSG_TYPE_DATA
 from wsgateway.log import *
 from wsgateway.utils import read_into_queue
-import configparser
-import argparse
+from wsgateway.config import setup_args_and_config
 
 # config
 
@@ -19,7 +18,7 @@ REMOTE_HOSTNAME = ""
 GATEWAY_URL_FULL = ""
 GATEWAY_PW = ""
 
-LOCAL_PORT = 0
+CLIENT_PORT = 0
 
 async def handle_client(reader, writer):
     log_internal("opening the websocket connection")
@@ -78,64 +77,31 @@ async def handle_client(reader, writer):
 
 async def run_server():
     log_internal("starting server")
-    server = await asyncio.start_server(handle_client, 'localhost', LOCAL_PORT)
+    server = await asyncio.start_server(handle_client, 'localhost', CLIENT_PORT)
     async with server:
         await server.serve_forever()
 
 def main():
-    parser = argparse.ArgumentParser(description='Websocket Gateway - Client')
-    parser.add_argument('--profile', dest='profile', help='.ini file storing the profile configuration.')
-    
-    define_logging_parser_args(parser)
-    
-    args = parser.parse_args()
+    config = setup_args_and_config("Client")
+    config.parse_remote_provider()
+    config.parse_provider_name()
+    config.parse_client_port()
+    config.parse_gateway_password()
+    config.parse_gateway_url()
+    config.finish()
 
-    if not setup_logging(args):
-        print("bad logging arguments.")
-        parser.print_help()
-        return
+    global REMOTE_PORT, REMOTE_HOSTNAME, CLIENT_PORT, GATEWAY_URL_FULL, GATEWAY_PW
 
-    if not args.profile or not os.path.exists(args.profile):
-        print("profile not set or file not found!")
-        print("---")
-        parser.print_help()
-        return
+    REMOTE_PORT = config.provider_port
+    REMOTE_HOSTNAME = config.provider_hostname
 
-    config = configparser.ConfigParser()
-    config.read(args.profile)
+    CLIENT_PORT = config.client_port
 
-    remote_provider = None
+    gateway_url = config.gateway_url
+    gateway_url_base = gateway_url + "c/" if gateway_url.endswith("/") else gateway_url + "/c/"
+    GATEWAY_URL_FULL = gateway_url_base + config.provider_name
 
-    if "remote" in config:
-        remote_config = config["remote"]
-
-        global REMOTE_PORT, REMOTE_HOSTNAME
-        remote_provider = remote_config.get("provider")
-        REMOTE_PORT = remote_config.getint("port")
-        REMOTE_HOSTNAME = remote_config.get("hostname")
-    else:
-        print("ERROR: the remote section was not found in the profile file!")
-
-    if "local" in config:
-        local_config = config["local"]
-
-        global LOCAL_PORT
-        LOCAL_PORT = local_config.getint("port")
-    else:
-        print("ERROR: the local section was not found in the profile file!")
-
-    if "gateway" in config:
-        gw_config = config["gateway"]
-
-        global GATEWAY_URL_FULL, GATEWAY_PW
-
-        gateway_url = gw_config.get("url")
-        gateway_url_base = gateway_url + "c/" if gateway_url.endswith("/") else gateway_url + "/c/"
-        GATEWAY_URL_FULL = gateway_url_base + remote_provider
-
-        GATEWAY_PW = gw_config.get("password")
-    else:
-        print("ERROR: the gateway section was not found in the profile file!")
+    GATEWAY_PW = config.gateway_pw
 
     asyncio.run(run_server())
 

@@ -8,6 +8,7 @@ import argparse
 
 from wsgateway.messages import unpack_msg_provider, pack_msg_provider, pack_msg_close
 from wsgateway.utils import KeyedQueueMap
+from wsgateway.config import setup_args_and_config
 from wsgateway.log import *
 
 PW = ""
@@ -125,27 +126,15 @@ async def handle_connection(websocket, path: str):
         await handle_connection_provider(websocket, provider_name)
 
 def main():
-    parser = argparse.ArgumentParser(description='Websocket Gateway - Gateway')
-    parser.add_argument('--password', dest='password', help='password used for the gateway')
-    parser.add_argument('--port', type=int, dest='port', help='port used for the gateway')
-    
-    define_logging_parser_args(parser)
-    
-    args = parser.parse_args()
-
-    if not setup_logging(args):
-        print("bad logging arguments.")
-        parser.print_help()
-        return
-
-    if not args.port or args.port < 1024 or not args.password:
-        parser.print_help()
-        return
+    config = setup_args_and_config("Gateway")
+    config.parse_gateway_password()
+    config.parse_gateway_port()
+    config.finish()
 
     global PW
-    PW = args.password
+    PW = config.gateway_pw
 
-    start_server = websockets.serve(handle_connection, 'localhost', args.port)
+    start_server = websockets.serve(handle_connection, 'localhost', config.gateway_port)
     asyncio.get_event_loop().run_until_complete(start_server)
     asyncio.get_event_loop().run_forever()
 

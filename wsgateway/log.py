@@ -1,31 +1,15 @@
+from __future__ import annotations
+
 import logging
 import os
+import configparser
+from wsgateway.config import WSGWConfigParser
 
-def define_logging_parser_args(parser):
-    parser.add_argument('--log-level', dest='log_level', help='log level')
-    parser.add_argument('--log-filename', dest='log_filename', help='filename of the log')
-
-def setup_logging(args):
-    log_filename = None
-    log_level = logging.WARNING
-    
-    if args.log_filename:
-        if os.path.exists(args.log_filename):
-            log_filename = args.log_filename
-        else:
-            return False
-    
-    if args.log_level:
-        log_level = logging._nameToLevel[str(args.log_level).upper()]
-        if not log_level:
-            return False
-
-    if log_filename:
-        logging.basicConfig(filename=log_filename, encoding='utf-8', level=log_level)
+def setup_logging(config: WSGWConfigParser):
+    if config.logFilename:
+        logging.basicConfig(filename=config.logFilename, encoding='utf-8', level=config.logLevel)
     else:
-        logging.basicConfig(level=log_level)
-
-    return True
+        logging.basicConfig(level=config.logLevel)
     
 
 def log_internal_warn(text: str):

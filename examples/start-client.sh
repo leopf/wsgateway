@@ -1,1 +1,1 @@
-wsgw-client --profile examples/profile.ini --log-level info
+wsgw-client --config examples/client-config.ini
